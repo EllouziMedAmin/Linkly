@@ -27,6 +27,7 @@ export default function Apply() {
   
   // Custom form answers
   const [answers, setAnswers] = useState({})
+  const [files, setFiles] = useState({}) // Stores base64 of files
 
   useEffect(() => {
     fetchForm()
@@ -69,6 +70,44 @@ export default function Apply() {
     }))
   }
 
+  const handleFileChange = async (fieldId, file) => {
+    if (!file) return
+    
+    try {
+      const base64 = await new Promise((resolve, reject) => {
+        const reader = new FileReader()
+        reader.readAsDataURL(file)
+        reader.onload = () => {
+          // dataURL format: "data:application/pdf;base64,JVBERi..."
+          // Extract just the base64 part for Gemini
+          const result = reader.result
+          const base64Data = result.split(',')[1]
+          resolve(base64Data)
+        }
+        reader.onerror = error => reject(error)
+      })
+
+      setFiles(prev => ({
+        ...prev,
+        [fieldId]: {
+          base64,
+          mimeType: file.type,
+          name: file.name
+        }
+      }))
+      
+      // Also save the filename in the text answers so organizers can see what was uploaded
+      setAnswers(prev => ({
+        ...prev,
+        [fieldId]: `[File Uploaded: ${file.name}]`
+      }))
+      
+    } catch (err) {
+      console.error('Error reading file:', err)
+      setError('Failed to process file upload')
+    }
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     
@@ -87,10 +126,11 @@ export default function Apply() {
         name,
         email,
         profileType,
-        ...answers // Map field IDs to actual labels if needed, but Gemini handles JSON well
+        ...answers
       }
       
-      const aiEnrichment = await enrichProfile(allAnswers, programme.description)
+      const fileArray = Object.values(files)
+      const aiEnrichment = await enrichProfile(allAnswers, programme.description, fileArray)
       
       // Determine initial status based on programme selection type
       let initialStatus = 'pending'
@@ -280,6 +320,14 @@ export default function Apply() {
                           <option key={opt} value={opt}>{opt}</option>
                         ))}
                       </select>
+                    ) : field.field_type === 'file' ? (
+                      <input
+                        type="file"
+                        accept=".pdf"
+                        required={field.required}
+                        onChange={e => handleFileChange(field.id, e.target.files[0])}
+                        className="input-glass file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-accent-subtle file:text-accent hover:file:bg-accent/20 cursor-pointer"
+                      />
                     ) : (
                       <input
                         type={field.field_type === 'number' ? 'number' : field.field_type === 'url' ? 'url' : 'text'}

@@ -325,6 +325,7 @@ export default function CreateProgramme() {
                           <option value="url">URL Link</option>
                           <option value="number">Number</option>
                           <option value="select">Dropdown</option>
+                          <option value="file">File Upload (PDF)</option>
                         </select>
                       </div>
                     </div>

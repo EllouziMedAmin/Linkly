@@ -1,7 +1,7 @@
 import { GoogleGenerativeAI } from '@google/generative-ai'
 
 const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY)
-const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
+const model = genAI.getGenerativeModel({ model: 'gemini-3.1-flash-lite' })
 
 /**
  * Parse a JSON response from Gemini, stripping markdown fences.
@@ -19,12 +19,14 @@ function parseGeminiJSON(text) {
  * Call 1 — After registration: Enrich participant profile
  * Returns: { summary, tags, score, url_valid }
  */
-export async function enrichProfile(formAnswers, programmeDescription) {
+export async function enrichProfile(formAnswers, programmeDescription, files = []) {
   const prompt = `You are a programme coordinator AI. A participant just registered.
 Analyse their form answers and return ONLY valid JSON, no markdown, no explanation.
 
 Form answers: ${JSON.stringify(formAnswers)}
 Programme goal: ${programmeDescription || 'General programme'}
+
+${files.length > 0 ? "The applicant also provided attached files (e.g. CVs or Pitch Decks). Please analyze them thoroughly." : ""}
 
 Return this exact JSON structure:
 {
@@ -41,7 +43,18 @@ Rules:
 - "url_valid" should be true unless URL fields look fake/broken`
 
   try {
-    const result = await model.generateContent(prompt)
+    const parts = [prompt]
+    
+    files.forEach(f => {
+      parts.push({
+        inlineData: {
+          data: f.base64,
+          mimeType: f.mimeType
+        }
+      })
+    })
+
+    const result = await model.generateContent(parts)
     const text = result.response.text()
     return parseGeminiJSON(text)
   } catch (error) {
