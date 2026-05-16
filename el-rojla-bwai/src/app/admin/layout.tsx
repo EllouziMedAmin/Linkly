@@ -3,14 +3,15 @@
 import { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, UserPlus, FolderKanban, Inbox, ArrowLeft } from "lucide-react";
+import { LayoutDashboard, UserPlus, FolderKanban, Inbox, ArrowLeft, Network } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
 import { LogoFull } from "@/components/Logo";
 
 const navItems = [
   { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/applications", label: "Applications", icon: Inbox },
-  { href: "/admin/onboard", label: "Onboard Company", icon: UserPlus },
+  { href: "/admin/onboard", label: "Onboard", icon: UserPlus },
+  { href: "/admin/pipeline", label: "Pipeline Monitor", icon: Network },
   { href: "/admin/programmes", label: "Programmes", icon: FolderKanban },
 ];
 
