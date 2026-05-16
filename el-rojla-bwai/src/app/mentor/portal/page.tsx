@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import FirstTimeSetup from "@/components/FirstTimeSetup";
 import {
   Users,
   GitBranch,
@@ -39,6 +40,7 @@ export default function MentorPortal() {
   const [mentors, setMentors] = useState<Mentor[]>([]);
   const [loading, setLoading] = useState(true);
   const [pulsingId, setPulsingId] = useState<string | null>(null);
+  const [setupDone, setSetupDone] = useState(false);
 
   const fetchData = async () => {
     const profRes = await fetch("/api/profiles?role=mentor");
@@ -154,16 +156,11 @@ export default function MentorPortal() {
             <Activity className="w-8 h-8 text-neutral-500 animate-pulse mx-auto mb-3" />
             <p className="text-slate-500 dark:text-slate-400">Loading mentors...</p>
           </div>
-        ) : mentors.length === 0 ? (
-          <div className="py-20 text-center border border-dashed border-neutral-700 rounded-2xl">
-            <Users className="w-12 h-12 text-neutral-600 mx-auto mb-4" />
-            <p className="text-slate-500 dark:text-slate-400 font-medium">
-              No mentors registered yet
-            </p>
-            <p className="text-sm text-neutral-500 mt-1">
-              Run the Synthetic Simulator to seed mentor profiles.
-            </p>
-          </div>
+        ) : mentors.length === 0 && !setupDone ? (
+          <FirstTimeSetup
+            entityType="mentor"
+            onComplete={() => { setSetupDone(true); fetchData(); }}
+          />
         ) : (
           <div className="grid gap-6">
             {mentors.map((mentor) => {

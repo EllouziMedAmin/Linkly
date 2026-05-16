@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import FirstTimeSetup from "@/components/FirstTimeSetup";
 import {
   Building2,
   GitBranch,
@@ -33,32 +34,27 @@ interface Company {
 export default function CompanyPortal() {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [loading, setLoading] = useState(true);
+  const [setupDone, setSetupDone] = useState(false);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      // Fetch companies
-      const profRes = await fetch("/api/profiles?role=company");
-      const profData = await profRes.json();
 
-      // Fetch all linkages
-      const linkRes = await fetch("/api/linkages");
-      const linkData = await linkRes.json();
+  const fetchData = async () => {
+    setLoading(true);
+    const profRes = await fetch("/api/profiles?role=company");
+    const profData = await profRes.json();
+    const linkRes = await fetch("/api/linkages");
+    const linkData = await linkRes.json();
+    if (profData.success && linkData.success) {
+      const linkages: Linkage[] = linkData.data || [];
+      const enriched = (profData.data || []).map((company: any) => ({
+        ...company,
+        linkages: linkages.filter((l: Linkage) => l.entity_a?.id === company.id),
+      }));
+      setCompanies(enriched);
+    }
+    setLoading(false);
+  };
 
-      if (profData.success && linkData.success) {
-        const linkages: Linkage[] = linkData.data || [];
-        const enriched = (profData.data || []).map((company: any) => ({
-          ...company,
-          linkages: linkages.filter(
-            (l: Linkage) => l.entity_a?.id === company.id
-          ),
-        }));
-        setCompanies(enriched);
-      }
-      setLoading(false);
-    };
-
-    fetchData();
-  }, []);
+  useEffect(() => { fetchData(); }, []);
 
   const getHealthColor = (score: number) => {
     if (score >= 80) return "text-sky-500";
@@ -106,20 +102,11 @@ export default function CompanyPortal() {
             <Activity className="w-8 h-8 text-neutral-500 animate-pulse mx-auto mb-3" />
             <p className="text-slate-500 dark:text-slate-400">Loading companies...</p>
           </div>
-        ) : companies.length === 0 ? (
-          <div className="py-20 text-center border border-dashed border-neutral-700 rounded-2xl">
-            <Building2 className="w-12 h-12 text-neutral-600 mx-auto mb-4" />
-            <p className="text-slate-500 dark:text-slate-400 font-medium">
-              No companies onboarded yet
-            </p>
-            <p className="text-sm text-neutral-500 mt-1">
-              Use the{" "}
-              <Link href="/admin/onboard" className="text-sky-500 underline">
-                AI Onboarding
-              </Link>{" "}
-              to add companies.
-            </p>
-          </div>
+        ) : companies.length === 0 && !setupDone ? (
+          <FirstTimeSetup
+            entityType="company"
+            onComplete={() => { setSetupDone(true); fetchData(); }}
+          />
         ) : (
           <div className="grid gap-6">
             {companies.map((company) => (
