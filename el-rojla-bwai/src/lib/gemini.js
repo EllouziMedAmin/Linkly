@@ -1,36 +1,59 @@
 import { GoogleGenerativeAI } from '@google/generative-ai'
 
 const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY)
-const model = genAI.getGenerativeModel({ model: 'gemini-3.1-flash-lite' })
+
+// Use Gemini 3.1 Flash-Lite as requested
+const model = genAI.getGenerativeModel({ 
+  model: 'gemini-3.1-flash-lite'
+})
 
 /**
- * Parse a JSON response from Gemini, stripping markdown fences.
+ * Robust JSON parser
  */
 function parseGeminiJSON(text) {
-  let cleaned = text.trim()
-  // Strip markdown code fences
-  if (cleaned.startsWith('```')) {
-    cleaned = cleaned.replace(/^```(?:json)?\s*\n?/, '').replace(/\n?```\s*$/, '')
+  try {
+    const firstBrace = text.indexOf('{');
+    const firstBracket = text.indexOf('[');
+    const lastBrace = text.lastIndexOf('}');
+    const lastBracket = text.lastIndexOf(']');
+    
+    let start = -1;
+    let end = -1;
+    
+    if (firstBracket !== -1 && (firstBrace === -1 || firstBracket < firstBrace)) {
+        start = firstBracket;
+        end = lastBracket;
+    } else if (firstBrace !== -1) {
+        start = firstBrace;
+        end = lastBrace;
+    }
+
+    if (start !== -1 && end !== -1) {
+        const jsonStr = text.substring(start, end + 1);
+        return JSON.parse(jsonStr);
+    }
+    
+    return JSON.parse(text);
+  } catch (e) {
+    console.error("Failed to parse JSON:", text);
+    throw e;
   }
-  return JSON.parse(cleaned)
 }
 
-/**
- * Call 1 — After registration: Enrich participant profile
- * Returns: { summary, tags, score, url_valid }
- */
-export async function enrichProfile(formAnswers, programmeDescription, files = []) {
+export async function enrichProfile(formAnswers, programmeDescription, files = [], formFields = []) {
   const prompt = `You are a programme coordinator AI. A participant just registered.
-Analyse their form answers and return ONLY valid JSON, no markdown, no explanation.
+Analyse their form answers and return ONLY valid JSON.
 
 Form answers: ${JSON.stringify(formAnswers)}
 Programme goal: ${programmeDescription || 'General programme'}
+Programme rules and fields: ${JSON.stringify(formFields)}
 
-${files.length > 0 ? "The applicant also provided attached files (e.g. CVs or Pitch Decks). Please analyze them thoroughly." : ""}
+${files.length > 0 ? "The applicant also provided attached files. Analyze them thoroughly." : ""}
 
 Return this exact JSON structure:
 {
   "summary": "one sentence describing this participant",
+  "reason": "one sentence explaining why they got this score based on the programme rules",
   "tags": ["tag1", "tag2", "tag3"],
   "score": 75,
   "url_valid": true
@@ -38,24 +61,27 @@ Return this exact JSON structure:
 
 Rules:
 - "summary" must be a single concise sentence
+- "reason" must be a concise sentence explaining the score
 - "tags" must be an array of 2-5 relevant tags (lowercase)
 - "score" must be an integer 0-100 based on how well they fit the programme
 - "url_valid" should be true unless URL fields look fake/broken`
 
   try {
-    const parts = [prompt]
+    const parts = [{ text: prompt }]
     
     files.forEach(f => {
+      // Ensure mimetype is valid for Gemini (e.g. application/pdf, image/jpeg)
       parts.push({
         inlineData: {
           data: f.base64,
-          mimeType: f.mimeType
+          mimeType: f.mimeType || 'application/pdf'
         }
       })
     })
 
     const result = await model.generateContent(parts)
     const text = result.response.text()
+    console.log("Enrich Profile API Response:", text)
     return parseGeminiJSON(text)
   } catch (error) {
     console.error('Gemini enrichProfile error:', error)
@@ -68,10 +94,6 @@ Rules:
   }
 }
 
-/**
- * Call 2 — Mentor matching
- * Returns: [{ mentor_id, score, reason }]
- */
 export async function generateMatches(participant, mentors, matchCriteria) {
   const mentorList = mentors.map(m => ({
     id: m.id,
@@ -81,7 +103,7 @@ export async function generateMatches(participant, mentors, matchCriteria) {
   }))
 
   const prompt = `You are a matching engine. Match this participant to the best mentors.
-Return ONLY valid JSON array, no markdown, no explanation.
+Return ONLY valid JSON array.
 
 Participant summary: ${participant.ai_summary || 'No summary available'}
 Participant tags: ${JSON.stringify(participant.ai_tags || [])}
@@ -91,7 +113,9 @@ Mentors:
 ${JSON.stringify(mentorList)}
 
 Return exactly this format:
-[{ "mentor_id": "uuid-here", "score": 85, "reason": "one sentence explanation" }]
+[
+  { "mentor_id": "uuid-here", "score": 85, "reason": "one sentence explanation" }
+]
 
 Rules:
 - Return top 3 only, sorted by score descending
@@ -109,13 +133,9 @@ Rules:
   }
 }
 
-/**
- * Call 3 — Analytics report generation
- * Returns: { insights, top_mentor_profile, recommendation, summary }
- */
 export async function generateReport(sessions, matches, participants) {
   const prompt = `You are a programme analyst. Generate insights from this programme data.
-Return ONLY valid JSON, no markdown.
+Return ONLY valid JSON.
 
 Sessions: ${JSON.stringify(sessions || [])}
 Matches: ${JSON.stringify(matches || [])}
@@ -144,13 +164,9 @@ Return exactly this format:
   }
 }
 
-/**
- * Call 4 — Mentor briefing for a team
- * Returns: { bullets: [string, string, string] }
- */
 export async function generateBriefing(participant) {
   const prompt = `You are a mentor preparation assistant. Generate a concise 3-bullet briefing for a mentor about their assigned team/participant.
-Return ONLY valid JSON, no markdown.
+Return ONLY valid JSON.
 
 Participant: ${participant.name || 'Unknown'}
 Summary: ${participant.ai_summary || 'No summary'}

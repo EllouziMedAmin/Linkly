@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Plus, Users, Award, Clock, ArrowRight, Settings } from 'lucide-react'
+import { Plus, Users, Award, Clock, ArrowRight, Trash2 } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
 import { supabase } from '../../lib/supabase'
 import { PageWrapper } from '../../components/layout/PageWrapper'
@@ -55,6 +55,27 @@ export default function Dashboard() {
       console.error('Dashboard error:', err)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleDeleteProgramme = async (e, id) => {
+    e.stopPropagation() // Prevent card click
+    
+    if (window.confirm("Are you sure you want to delete this programme? All applicants and matches will be lost.")) {
+      try {
+        const { error } = await supabase
+          .from('programmes')
+          .delete()
+          .eq('id', id)
+          
+        if (error) throw error
+        
+        // Remove from local state
+        setProgrammes(prev => prev.filter(p => p.id !== id))
+      } catch (err) {
+        console.error('Failed to delete programme:', err)
+        alert('Could not delete programme')
+      }
     }
   }
 
@@ -129,8 +150,12 @@ export default function Dashboard() {
                     <Badge variant={p.status === 'open' ? 'green' : p.status === 'draft' ? 'gray' : 'purple'}>
                       {p.status.toUpperCase()}
                     </Badge>
-                    <button className="p-2 -mt-2 -mr-2 text-text-tertiary hover:text-text-primary rounded-full hover:bg-black/5 transition-colors">
-                      <Settings size={18} />
+                    <button 
+                      onClick={(e) => handleDeleteProgramme(e, p.id)}
+                      className="p-2 -mt-2 -mr-2 text-text-tertiary hover:text-red-500 rounded-full hover:bg-red-50 transition-colors"
+                      title="Delete Programme"
+                    >
+                      <Trash2 size={18} />
                     </button>
                   </div>
                   

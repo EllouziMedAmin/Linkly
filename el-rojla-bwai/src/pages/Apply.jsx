@@ -130,7 +130,7 @@ export default function Apply() {
       }
       
       const fileArray = Object.values(files)
-      const aiEnrichment = await enrichProfile(allAnswers, programme.description, fileArray)
+      const aiEnrichment = await enrichProfile(allAnswers, programme.description, fileArray, fields)
       
       // Determine initial status based on programme selection type
       let initialStatus = 'pending'
@@ -149,7 +149,7 @@ export default function Apply() {
           email,
           profile_type: profileType,
           form_answers: answers,
-          ai_summary: aiEnrichment.summary,
+          ai_summary: `${aiEnrichment.summary}\n\nScore Reasoning: ${aiEnrichment.reason || 'N/A'}`,
           ai_tags: aiEnrichment.tags,
           ai_score: aiEnrichment.score,
           status: initialStatus

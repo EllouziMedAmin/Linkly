@@ -8,6 +8,7 @@ import { Navbar } from '../../components/layout/Navbar'
 import { Card } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
 import { Drawer } from '../../components/ui/Drawer'
+import { Modal } from '../../components/ui/Modal'
 import { CytoscapeGraph } from '../../components/graph/CytoscapeGraph'
 
 export default function Matching() {
@@ -20,6 +21,9 @@ export default function Matching() {
   const [loading, setLoading] = useState(true)
   const [generatingFor, setGeneratingFor] = useState(null)
   const [selectedNode, setSelectedNode] = useState(null)
+  
+  const [isMentorModalOpen, setIsMentorModalOpen] = useState(false)
+  const [newMentor, setNewMentor] = useState({ name: '', email: '', bio: '', tags: '' })
 
   useEffect(() => {
     fetchData()
@@ -89,10 +93,16 @@ export default function Matching() {
           // Update local state
           const newMatches = [...matches.filter(m => m.participant_id !== participantId), ...inserts]
           setMatches(newMatches)
+        } else {
+          console.error("Supabase insert error:", error)
+          alert("Matches generated but failed to save to database.")
         }
+      } else {
+        alert("The AI could not find any suitable mentors, or an error occurred during analysis. Try adding more detailed mentors.")
       }
     } catch (err) {
       console.error('Error generating matches:', err)
+      alert('Error generating matches: ' + err.message)
     } finally {
       setGeneratingFor(null)
     }
@@ -125,6 +135,29 @@ export default function Matching() {
       setMatches(newMatches)
     } catch (err) {
       console.error('Failed to confirm match', err)
+    }
+  }
+
+  const handleAddMentor = async (e) => {
+    e.preventDefault()
+    try {
+      const { data, error } = await supabase.from('mentors').insert({
+        programme_id: id,
+        name: newMentor.name,
+        email: newMentor.email,
+        bio: newMentor.bio,
+        expertise_tags: newMentor.tags.split(',').map(t => t.trim()).filter(Boolean)
+      }).select().single()
+
+      if (error) throw error
+
+      setMentors([...mentors, data])
+      setIsMentorModalOpen(false)
+      setNewMentor({ name: '', email: '', bio: '', tags: '' })
+      alert('Mentor successfully added! You can now generate matches for them.')
+    } catch (err) {
+      console.error('Failed to add mentor:', err)
+      alert('Failed to add mentor. Ensure the user email exists in auth, or just use the generated demo mentors for now.')
     }
   }
 
@@ -180,7 +213,7 @@ export default function Matching() {
   }, [participants, mentors, matches])
 
   return (
-    <PageWrapper className="h-screen overflow-hidden flex flex-col">
+    <PageWrapper>
       <Navbar />
       
       {/* Sub-nav */}
@@ -200,6 +233,12 @@ export default function Matching() {
               className="btn-ghost text-accent hover:bg-accent-subtle"
             >
               <Zap size={16} /> Auto-Match All
+            </button>
+            <button 
+              onClick={() => setIsMentorModalOpen(true)}
+              className="btn-secondary py-1.5 text-xs h-8"
+            >
+              Add Mentor
             </button>
 
             <div className="flex bg-black/5 p-1 rounded-lg">
@@ -224,8 +263,8 @@ export default function Matching() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-6">
-        <div className="container-full h-full flex flex-col">
+      <div className="p-6 pb-20">
+        <div className="container-full flex flex-col gap-8">
           
           {loading ? (
             <div className="flex items-center justify-center h-full">
@@ -250,7 +289,37 @@ export default function Matching() {
             </div>
           ) : (
             /* Card View - Action oriented */
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 pb-20">
+            <div className="flex flex-col gap-8 pb-20">
+              {/* Available Mentors Pool */}
+              <div>
+                <h3 className="text-xs font-semibold text-text-tertiary uppercase tracking-wider mb-3 px-1">Mentor Pool ({mentors.length})</h3>
+                <div className="flex gap-4 overflow-x-auto pb-4 snap-x no-scrollbar">
+                  {mentors.map(m => (
+                    <Card key={m.id} className="min-w-[280px] max-w-[280px] p-4 snap-start border border-glass-border bg-white/40 hover:border-accent/30 transition-colors">
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="w-8 h-8 rounded-full bg-[#30D1BC]/20 text-[#30D1BC] flex items-center justify-center font-bold text-xs shrink-0">
+                          {m.name.charAt(0)}
+                        </div>
+                        <h4 className="font-bold text-sm truncate">{m.name}</h4>
+                      </div>
+                      <p className="text-xs text-text-secondary mt-1 line-clamp-2" title={m.bio}>{m.bio}</p>
+                      <div className="flex gap-1 flex-wrap mt-3">
+                        {m.expertise_tags?.slice(0, 3).map(t => <Badge key={t} variant="teal" className="text-[10px] py-0">{t}</Badge>)}
+                        {m.expertise_tags?.length > 3 && <span className="text-[10px] text-text-tertiary">+{m.expertise_tags.length - 3}</span>}
+                      </div>
+                    </Card>
+                  ))}
+                  {mentors.length === 0 && (
+                    <div className="text-sm text-text-secondary italic px-1">No mentors available. Add a mentor to start matching.</div>
+                  )}
+                </div>
+              </div>
+
+              {/* Participants Grid */}
+              <div>
+                <h3 className="text-xs font-semibold text-text-tertiary uppercase tracking-wider mb-3 px-1">Participants needing matches ({participants.length})</h3>
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+
               {participants.map(p => {
                 const pMatches = matches.filter(m => m.participant_id === p.id)
                 const confirmed = pMatches.find(m => m.status === 'confirmed')
@@ -326,6 +395,8 @@ export default function Matching() {
                   </Card>
                 )
               })}
+                </div>
+              </div>
             </div>
           )}
         </div>
@@ -354,6 +425,28 @@ export default function Matching() {
           </div>
         )}
       </Drawer>
+
+      <Modal isOpen={isMentorModalOpen} onClose={() => setIsMentorModalOpen(false)} title="Add a Mentor Manually">
+        <form onSubmit={handleAddMentor} className="flex flex-col gap-4">
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-medium">Name</label>
+            <input required type="text" value={newMentor.name} onChange={e => setNewMentor({...newMentor, name: e.target.value})} className="input-glass" />
+          </div>
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-medium">Email (must match a registered user for portals to work)</label>
+            <input type="email" value={newMentor.email} onChange={e => setNewMentor({...newMentor, email: e.target.value})} className="input-glass" />
+          </div>
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-medium">Bio / Experience</label>
+            <textarea required value={newMentor.bio} onChange={e => setNewMentor({...newMentor, bio: e.target.value})} className="input-glass" rows={3} />
+          </div>
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-medium">Expertise Tags (comma separated)</label>
+            <input required type="text" value={newMentor.tags} onChange={e => setNewMentor({...newMentor, tags: e.target.value})} className="input-glass" placeholder="fintech, marketing, ai" />
+          </div>
+          <button type="submit" className="btn-primary w-full mt-4">Add Mentor</button>
+        </form>
+      </Modal>
     </PageWrapper>
   )
 }
