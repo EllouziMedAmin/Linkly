@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 110" fill="none">
+  <!-- Blue vertical bar -->
+  <rect x="10" y="5" width="32" height="75" fill="#2F6FBF"/>
+  <!-- White horizontal base with diagonal cut -->
+  <polygon points="10,80 10,105 75,105 42,80" fill="white"/>
+</svg>

@@ -13,6 +13,10 @@ export const metadata: Metadata = {
   title: "El-Rojla-Bwai | Programmable Ecosystem Linkages",
   description:
     "AI-powered platform that automates ecosystem relationships as reusable, programmable entities. Built for Cradle MyHack 2026.",
+  icons: {
+    icon: "/favicon.svg",
+    shortcut: "/favicon.svg",
+  },
 };
 
 export default function RootLayout({
@@ -23,6 +27,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} h-full antialiased`} suppressHydrationWarning>
       <head>
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
         <script
           dangerouslySetInnerHTML={{
             __html: `
