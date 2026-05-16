@@ -6,7 +6,8 @@ import { enrichProfile } from '../lib/gemini'
 import { PageWrapper } from '../components/layout/PageWrapper'
 import { Navbar } from '../components/layout/Navbar'
 import { Card } from '../components/ui/Card'
-import { AlertCircle, CheckCircle2, ArrowRight } from 'lucide-react'
+import { AlertCircle, CheckCircle2, ArrowRight, CalendarPlus, Clock, MapPin } from 'lucide-react'
+import { downloadProgrammeCalendar, downloadDeadlineReminder } from '../lib/calendar'
 
 export default function Apply() {
   const { id } = useParams()
@@ -188,17 +189,63 @@ export default function Apply() {
     return (
       <PageWrapper>
         <Navbar />
-        <div className="container-narrow py-20">
+        <div className="container-narrow py-12">
           <Card className="p-10 text-center max-w-lg mx-auto animate-scale-in">
             <div className="w-16 h-16 bg-green-50 text-green-500 rounded-full flex items-center justify-center mx-auto mb-6">
               <CheckCircle2 size={32} />
             </div>
             <h2 className="text-2xl font-bold mb-2">Application Received!</h2>
-            <p className="text-text-secondary mb-8">
+            <p className="text-text-secondary mb-6">
               {programme.selection_type === 'fcfs' 
-                ? "You've been successfully registered for this programme. Check your portal for details."
+                ? "You've been successfully registered for this programme."
                 : "Your application is under review. You'll be notified once a decision is made."}
             </p>
+
+            {/* Programme Summary */}
+            <div className="bg-bg-light rounded-xl p-5 text-left mb-6 flex flex-col gap-3">
+              <h3 className="font-semibold text-sm text-text-primary">{programme.title}</h3>
+              {programme.start_date && (
+                <div className="flex items-center gap-2 text-sm text-text-secondary">
+                  <Clock size={14} className="shrink-0 text-accent" />
+                  <span>Starts: {new Date(programme.start_date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                </div>
+              )}
+              {programme.deadline && (
+                <div className="flex items-center gap-2 text-sm text-text-secondary">
+                  <Clock size={14} className="shrink-0 text-red-400" />
+                  <span>Deadline: {new Date(programme.deadline).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                </div>
+              )}
+              {programme.location && (
+                <div className="flex items-center gap-2 text-sm text-text-secondary">
+                  <MapPin size={14} className="shrink-0 text-accent" />
+                  <span>{programme.location}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Calendar Buttons */}
+            <div className="flex flex-col gap-3 mb-8">
+              {(programme.start_date || programme.deadline) && (
+                <button 
+                  onClick={() => downloadProgrammeCalendar(programme)}
+                  className="btn-secondary w-full flex items-center justify-center gap-2 py-3 bg-accent-subtle border-accent/20 text-accent hover:bg-accent/10"
+                >
+                  <CalendarPlus size={18} />
+                  Add Programme to Calendar
+                </button>
+              )}
+              {programme.deadline && (
+                <button 
+                  onClick={() => downloadDeadlineReminder(programme)}
+                  className="btn-ghost w-full text-sm text-text-secondary hover:text-accent"
+                >
+                  <Clock size={14} />
+                  Set Deadline Reminder (48h before)
+                </button>
+              )}
+            </div>
+
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Link to="/portal/participant" className="btn-primary">
                 Go to Portal

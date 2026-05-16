@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { ChevronLeft, Check, RefreshCw, Zap, Network, LayoutGrid } from 'lucide-react'
+import { ChevronLeft, Check, RefreshCw, Zap, Network, LayoutGrid, Mail, X } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { generateMatches } from '../../lib/gemini'
 import { PageWrapper } from '../../components/layout/PageWrapper'
@@ -24,6 +24,7 @@ export default function Matching() {
   
   const [isMentorModalOpen, setIsMentorModalOpen] = useState(false)
   const [newMentor, setNewMentor] = useState({ name: '', email: '', bio: '', tags: '' })
+  const [notification, setNotification] = useState(null)
 
   useEffect(() => {
     fetchData()
@@ -133,6 +134,10 @@ export default function Matching() {
       }).filter(m => m.status === 'confirmed' || m.status === 'suggested')
       
       setMatches(newMatches)
+      
+      // 3. Simulate email dispatch
+      setNotification(`Confirmation emails sent to ${match.participant_name} and ${match.mentor_name}!`)
+      setTimeout(() => setNotification(null), 4000)
     } catch (err) {
       console.error('Failed to confirm match', err)
     }
@@ -215,6 +220,21 @@ export default function Matching() {
   return (
     <PageWrapper>
       <Navbar />
+      
+      {/* Notification Toast */}
+      {notification && (
+        <div className="fixed bottom-8 right-8 z-[100] animate-slide-up">
+          <div className="bg-accent text-white px-6 py-4 rounded-2xl shadow-glass-lg flex items-center gap-3 border border-white/20">
+            <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
+              <Mail size={16} />
+            </div>
+            <p className="font-medium pr-4">{notification}</p>
+            <button onClick={() => setNotification(null)} className="p-1 hover:bg-white/10 rounded-full transition-colors">
+              <X size={16} />
+            </button>
+          </div>
+        </div>
+      )}
       
       {/* Sub-nav */}
       <div className="bg-white/60 border-b border-glass-border sticky top-16 z-40 backdrop-blur-md shrink-0">

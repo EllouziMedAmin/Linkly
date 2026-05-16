@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Calendar, Clock, Star, MessageSquare } from 'lucide-react'
+import { Calendar, Clock, Star, MessageSquare, CalendarPlus } from 'lucide-react'
+import { downloadMatchSession } from '../../lib/calendar'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../hooks/useAuth'
 import { PageWrapper } from '../../components/layout/PageWrapper'
@@ -163,7 +164,16 @@ export default function ParticipantPortal() {
                   <h3 className="font-semibold mb-4 border-b border-glass-border pb-2">Your Assigned Mentor</h3>
                   {mentor ? (
                     <div>
-                      <div className="font-bold text-lg text-accent">{mentor.name}</div>
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="font-bold text-lg text-accent">{mentor.name}</div>
+                        <button 
+                          onClick={() => downloadMatchSession(mentor.name, participant.name, programme.title)}
+                          className="p-2 rounded-lg bg-accent-subtle text-accent hover:bg-accent/20 transition-colors"
+                          title="Schedule Intro Session"
+                        >
+                          <CalendarPlus size={18} />
+                        </button>
+                      </div>
                       <p className="text-sm text-text-secondary mt-2 mb-4">{mentor.bio}</p>
                       <div className="flex flex-wrap gap-1 mb-4">
                         {mentor.expertise_tags?.map(t => <Badge key={t} variant="teal">{t}</Badge>)}

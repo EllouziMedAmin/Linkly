@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Plus, Users, Award, Clock, ArrowRight, Trash2 } from 'lucide-react'
+import { Plus, Users, Award, Clock, ArrowRight, Trash2, CalendarPlus, CheckCircle2 } from 'lucide-react'
+import { downloadProgrammeCalendar } from '../../lib/calendar'
 import { useAuth } from '../../hooks/useAuth'
 import { supabase } from '../../lib/supabase'
 import { PageWrapper } from '../../components/layout/PageWrapper'
@@ -163,8 +164,19 @@ export default function Dashboard() {
                   <p className="text-text-secondary text-sm mb-6 line-clamp-2">{p.description}</p>
                   
                   <div className="mt-auto pt-4 border-t border-glass-border flex items-center justify-between">
-                    <div className="text-sm font-medium text-text-secondary">
-                      {p.selection_type === 'ai_selected' ? 'AI Selected' : 'FCFS'}
+                    <div className="flex items-center gap-3">
+                      <div className="text-sm font-medium text-text-secondary">
+                        {p.selection_type === 'ai_selected' ? 'AI Selected' : 'FCFS'}
+                      </div>
+                      {(p.start_date || p.deadline) && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); downloadProgrammeCalendar(p) }}
+                          className="p-1.5 rounded-full text-text-tertiary hover:text-accent hover:bg-accent-subtle transition-colors"
+                          title="Add to Calendar"
+                        >
+                          <CalendarPlus size={15} />
+                        </button>
+                      )}
                     </div>
                     <div className="text-accent text-sm font-medium flex items-center gap-1 group-hover:translate-x-1 transition-transform">
                       Manage <ArrowRight size={16} />
@@ -178,8 +190,4 @@ export default function Dashboard() {
       </div>
     </PageWrapper>
   )
-}
-
-function CheckCircle2({ size }) {
-  return <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
 }

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Calendar, Clock, Star, Users, Zap } from 'lucide-react'
+import { Calendar, Clock, Star, Users, Zap, CalendarPlus } from 'lucide-react'
+import { downloadMatchSession } from '../../lib/calendar'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../hooks/useAuth'
 import { generateBriefing } from '../../lib/gemini'
@@ -148,9 +149,20 @@ export default function MentorPortal() {
             {assignments.map(match => (
               <Card key={match.id} className="overflow-hidden">
                 <div className="p-6 bg-white/40 border-b border-glass-border flex flex-col md:flex-row md:items-center justify-between gap-4">
-                  <div>
-                    <h3 className="text-xl font-bold text-text-primary">{match.participants.name}</h3>
-                    <p className="text-sm text-text-secondary mt-1">{match.participants.ai_summary}</p>
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between gap-4">
+                      <div>
+                        <h3 className="text-xl font-bold text-text-primary">{match.participants.name}</h3>
+                        <p className="text-sm text-text-secondary mt-1 line-clamp-1">{match.participants.ai_summary}</p>
+                      </div>
+                      <button 
+                        onClick={() => downloadMatchSession(mentor.name, match.participants.name, mentor.programme_title || 'Programme')}
+                        className="p-2.5 rounded-xl bg-accent-subtle text-accent hover:bg-accent/20 transition-colors flex items-center gap-2 font-medium text-xs whitespace-nowrap"
+                        title="Send Invite (Calendar)"
+                      >
+                        <CalendarPlus size={16} /> Invite
+                      </button>
+                    </div>
                     <div className="flex flex-wrap gap-1 mt-3">
                       {match.participants.ai_tags?.map(t => <Badge key={t} variant="purple" className="text-[10px]">{t}</Badge>)}
                     </div>

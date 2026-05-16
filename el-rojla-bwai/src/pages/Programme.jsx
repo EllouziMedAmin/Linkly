@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
-import { Calendar, Users, Target, CheckCircle2, ArrowRight } from 'lucide-react'
+import { Calendar, Users, Target, CheckCircle2, ArrowRight, CalendarPlus } from 'lucide-react'
 import { supabase } from '../lib/supabase'
+import { downloadProgrammeCalendar, downloadDeadlineReminder } from '../lib/calendar'
 import { PageWrapper } from '../components/layout/PageWrapper'
 import { Navbar } from '../components/layout/Navbar'
 import { Card } from '../components/ui/Card'
@@ -161,6 +162,15 @@ export default function ProgrammeDetail() {
                 >
                   Apply Now <ArrowRight size={16} />
                 </Link>
+                {(programme.start_date || programme.deadline) && (
+                  <button 
+                    onClick={() => downloadProgrammeCalendar(programme)}
+                    className="w-full mt-3 py-2.5 px-4 rounded-full text-sm font-medium text-white/90 border border-white/30 hover:bg-white/10 transition-colors flex items-center justify-center gap-2"
+                  >
+                    <CalendarPlus size={15} />
+                    Add to Calendar
+                  </button>
+                )}
               </Card>
             </div>
           </div>
