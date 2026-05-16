@@ -298,13 +298,20 @@ export default function Matching() {
                 onNodeClick={setSelectedNode} 
               />
               
-              {/* Legend overlay */}
-              <div className="absolute top-4 left-4 p-4 glass-card-static text-xs flex flex-col gap-2">
-                <div className="font-semibold mb-1">Network Legend</div>
-                <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-[#7F77DD]" /> Participant (Matched)</div>
-                <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-[#F5F5F7] border border-[#FF453A]" /> Participant (Needs Match)</div>
-                <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-[#30D1BC]" /> Mentor / Judge</div>
-                <div className="flex items-center gap-2"><span className="w-6 h-[2px] bg-[#AEAEB2]" /> Confirmed Match</div>
+              {/* Legend overlay — compact */}
+              <div className="absolute bottom-3 left-3 px-3 py-2 rounded-xl flex items-center gap-3 flex-wrap"
+                style={{ 
+                  background: 'rgba(20, 18, 37, 0.7)', 
+                  backdropFilter: 'blur(8px)', 
+                  border: '1px solid rgba(255,255,255,0.06)',
+                  fontSize: '9px',
+                  maxWidth: '320px'
+                }}>
+                <span className="flex items-center gap-1.5 text-white/50"><span className="w-2 h-2 rounded-full bg-[#7F77DD]" /> Matched</span>
+                <span className="flex items-center gap-1.5 text-white/50"><span className="w-2 h-2 rounded-full bg-[#3a3456] border border-[#FF453A]" /> Unmatched</span>
+                <span className="flex items-center gap-1.5 text-white/50"><span className="w-2 h-2 rounded-full bg-[#30D1BC]" /> Mentor</span>
+                <span className="flex items-center gap-1.5 text-white/50"><span className="w-4 h-[1.5px] bg-[#7F77DD] rounded-full" /> Confirmed Link</span>
+                <span className="flex items-center gap-1.5 text-white/50"><span className="w-4 h-[1.5px] rounded-full" style={{ backgroundImage: 'repeating-linear-gradient(90deg, #FFB340 0, #FFB340 3px, transparent 3px, transparent 6px)' }} /> Suggested Link</span>
               </div>
             </div>
           ) : (
