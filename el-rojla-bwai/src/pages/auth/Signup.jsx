@@ -4,6 +4,7 @@ import { useAuth } from '../../hooks/useAuth'
 import { PageWrapper } from '../../components/layout/PageWrapper'
 import { Card } from '../../components/ui/Card'
 import { Mail, Lock, AlertCircle, User as UserIcon } from 'lucide-react'
+import { Logo } from '../../components/ui/Logo'
 
 export default function Signup() {
   const [email, setEmail] = useState('')
@@ -38,9 +39,7 @@ export default function Signup() {
       
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="w-12 h-12 rounded-xl bg-accent text-white flex items-center justify-center font-bold text-xl mx-auto mb-4">
-            E
-          </div>
+          <Logo className="w-12 h-12 mx-auto mb-4" />
           <h1 className="text-2xl font-bold">Create your account</h1>
           <p className="text-text-secondary mt-2">Start managing your programmes with AI</p>
         </div>

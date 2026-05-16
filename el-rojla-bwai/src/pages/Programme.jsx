@@ -53,17 +53,20 @@ export default function ProgrammeDetail() {
       <Navbar />
       
       {/* Banner */}
-      <div 
-        className="h-64 md:h-80 w-full bg-cover bg-center relative"
-        style={{ 
-          backgroundImage: programme.cover_image_url ? `url(${programme.cover_image_url})` : 'none',
-          backgroundColor: programme.cover_image_url ? 'transparent' : 'rgba(127, 119, 221, 0.1)'
-        }}
-      >
-        <div className="absolute inset-0 bg-gradient-to-t from-bg-light via-bg-light/20 to-transparent" />
-      </div>
+      {programme.cover_image_url ? (
+        <div 
+          className="h-64 md:h-80 w-full bg-cover bg-center relative transition-all duration-500"
+          style={{ backgroundImage: `url(${programme.cover_image_url})` }}
+        >
+          <div className="absolute inset-0 bg-gradient-to-t from-bg-light via-bg-light/20 to-transparent" />
+        </div>
+      ) : (
+        <div className="h-12 w-full bg-transparent" />
+      )}
       
-      <div className="container-narrow -mt-32 relative z-10 pb-20">
+      <div className={`container-narrow relative z-10 pb-20 ${
+        programme.cover_image_url ? '-mt-32' : 'pt-4'
+      }`}>
         {/* Main Content */}
         <div className="flex flex-col gap-8">
           <div>

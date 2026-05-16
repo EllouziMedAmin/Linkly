@@ -1,4 +1,4 @@
-# El-Rojla-Bwai 🚀
+# Lyncly 🚀
 ### *Programmable Ecosystem Linkages (V3 Dense Architecture)*
 
 **Build with AI 2026 KL · MyHack Challenge**
@@ -6,7 +6,7 @@
 ---
 
 ## 🎯 The Vision
-Innovation ecosystem platforms currently depend on manual, ad-hoc coordination. **El-Rojla-Bwai** transforms these fragile relationships into **First-Class, Programmable Entities**. 
+Innovation ecosystem platforms currently depend on manual, ad-hoc coordination. **Lyncly** transforms these fragile relationships into **First-Class, Programmable Entities**. 
 
 Every connection in our system is a **Linkage Object** with its own lifecycle, behavioral DNA, friction allocation, and a direct tie-in to financial governance.
 
@@ -39,11 +39,11 @@ We bypass the "empty database" problem on Day 1 by using Gemini to generate 500 
 ---
 
 ## 🚀 48-Hour Hackathon Roadmap
-- [ ] **Phase 1:** Supabase Schema & Synthetic Data Simulator
-- [ ] **Phase 2:** Gemini-powered Agentic Onboarding & Friction Scoring
-- [ ] **Phase 3:** Vertex AI Bipartite Matching Engine
-- [ ] **Phase 4:** Cradle Grant Pausing Logic & 1-Click Micro-Pulse Emails
-- [ ] **Phase 5:** Interactive Network Graph Visualization
+- [x] **Phase 1:** Supabase Schema & Synthetic Data Simulator
+- [x] **Phase 2:** Gemini-powered Agentic Onboarding & Friction Scoring
+- [x] **Phase 3:** Vertex AI Bipartite Matching Engine
+- [x] **Phase 4:** Cradle Grant Pausing Logic & 1-Click Micro-Pulse Emails
+- [x] **Phase 5:** Interactive Network Graph Visualization
 
 ---
 
@@ -51,4 +51,4 @@ We bypass the "empty database" problem on Day 1 by using Gemini to generate 500 
 Built with passion for the **Build with AI 2026** Hackathon.
 
 ---
-*El-Rojla-Bwai: The engine that makes every connection programmable.*
+*Lyncly: The engine that makes every connection programmable.*

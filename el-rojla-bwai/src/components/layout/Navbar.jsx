@@ -2,6 +2,7 @@ import React from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
 import { LogOut, User as UserIcon } from 'lucide-react'
+import { Logo } from '../ui/Logo'
 
 export function Navbar() {
   const { user, signOut } = useAuth()
@@ -16,10 +17,8 @@ export function Navbar() {
     <nav className="glass-nav sticky top-0 z-50">
       <div className="container-full mx-auto px-6 h-16 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center text-white font-bold">
-            E
-          </div>
-          <span className="font-semibold text-lg tracking-tight">EcoLink AI</span>
+          <Logo className="w-8 h-8" />
+          <span className="font-semibold text-lg tracking-tight">Lyncly</span>
         </Link>
 
         <div className="flex items-center gap-6">
