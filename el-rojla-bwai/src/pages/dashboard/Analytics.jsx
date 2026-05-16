@@ -175,11 +175,11 @@ export default function Analytics() {
             <Card className="p-6 h-[600px] flex flex-col">
               <h3 className="font-semibold text-lg mb-4">Ecosystem Network Topology</h3>
               <p className="text-sm text-text-secondary mb-6">Historical view of all confirmed linkages in this cohort.</p>
-              <div className="flex-1 relative rounded-xl overflow-hidden bg-white/50 border border-glass-border">
+              <div className="flex-1 relative rounded-xl overflow-hidden">
                 {graphElements.length > 0 ? (
                   <CytoscapeGraph elements={graphElements} />
                 ) : (
-                  <div className="absolute inset-0 flex items-center justify-center text-text-tertiary">
+                  <div className="absolute inset-0 flex items-center justify-center text-text-tertiary bg-white/50 rounded-xl border border-glass-border">
                     Not enough data to map ecosystem
                   </div>
                 )}
