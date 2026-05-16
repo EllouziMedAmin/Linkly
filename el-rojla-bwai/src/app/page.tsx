@@ -84,13 +84,6 @@ export default function Home() {
           transition={{ duration: 0.6, ease: "easeOut" }}
           className="text-center max-w-4xl mx-auto"
         >
-          <div className="inline-flex items-center gap-2 bg-sky-100 dark:bg-sky-500/10 border border-sky-200 dark:border-sky-500/25 rounded-full px-4 py-1.5 mb-10">
-            <div className="w-2 h-2 rounded-full bg-sky-500" />
-            <span className="text-sm text-sky-700 dark:text-sky-400 font-medium tracking-wide">
-              Build with AI 2026 KL — MyHack
-            </span>
-          </div>
-
           <h1 className="text-6xl md:text-7xl font-extrabold tracking-tight leading-[1.08] mb-8">
             <span className="text-slate-800 dark:text-white">
               Programmable
@@ -180,7 +173,7 @@ export default function Home() {
       <footer className="relative z-10 border-t border-slate-100 dark:border-slate-800 py-7">
         <div className="max-w-7xl mx-auto px-8 flex items-center justify-between">
           <span className="text-xs text-slate-400 dark:text-slate-500 tracking-wide">
-            El-Rojla-Bwai — Cradle MyHack 2026
+            Linkly
           </span>
           <span className="text-xs text-slate-400 dark:text-slate-500 tracking-wide">
             Gemini 3.1 Flash-Lite + Supabase

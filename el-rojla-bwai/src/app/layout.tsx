@@ -10,7 +10,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "El-Rojla-Bwai | Programmable Ecosystem Linkages",
+  title: "Linkly | Programmable Ecosystem Linkages",
   description:
     "AI-powered platform that automates ecosystem relationships as reusable, programmable entities. Built for Cradle MyHack 2026.",
   icons: {
