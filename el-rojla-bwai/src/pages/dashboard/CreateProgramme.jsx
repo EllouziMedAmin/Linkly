@@ -228,15 +228,30 @@ export default function CreateProgramme() {
                     type="date" 
                     value={basicInfo.deadline}
                     onChange={e => setBasicInfo({...basicInfo, deadline: e.target.value})}
+                    max={basicInfo.start_date || undefined}
                     className="input-glass"
                   />
+                  {basicInfo.start_date && (
+                    <p className="text-xs text-text-tertiary">Must be on or before the programme start date</p>
+                  )}
+                  {basicInfo.deadline && basicInfo.start_date && basicInfo.deadline > basicInfo.start_date && (
+                    <p className="text-xs text-red-500 font-medium">⚠ Deadline cannot be after the programme start date</p>
+                  )}
                 </div>
                 <div className="flex flex-col gap-2">
                   <label className="text-sm font-medium">Programme Start Date</label>
                   <input 
                     type="date" 
                     value={basicInfo.start_date}
-                    onChange={e => setBasicInfo({...basicInfo, start_date: e.target.value})}
+                    onChange={e => {
+                      const newStart = e.target.value
+                      const updates = { ...basicInfo, start_date: newStart }
+                      // Auto-clear deadline if it now exceeds the start date
+                      if (basicInfo.deadline && newStart && basicInfo.deadline > newStart) {
+                        updates.deadline = newStart
+                      }
+                      setBasicInfo(updates)
+                    }}
                     className="input-glass"
                   />
                 </div>
@@ -444,7 +459,10 @@ export default function CreateProgramme() {
               <button 
                 onClick={handleNext} 
                 className="btn-primary"
-                disabled={step === 1 && !basicInfo.title}
+                disabled={
+                  (step === 1 && !basicInfo.title) ||
+                  (step === 1 && basicInfo.deadline && basicInfo.start_date && basicInfo.deadline > basicInfo.start_date)
+                }
               >
                 Next <ChevronRight size={18} />
               </button>

@@ -20,6 +20,7 @@ export default function Apply() {
   const [submitting, setSubmitting] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState(null)
+  const [hasApplied, setHasApplied] = useState(false)
 
   // Standard fields
   const [name, setName] = useState(user?.user_metadata?.name || '')
@@ -32,7 +33,7 @@ export default function Apply() {
 
   useEffect(() => {
     fetchForm()
-  }, [id])
+  }, [id, user])
 
   const fetchForm = async () => {
     try {
@@ -55,6 +56,19 @@ export default function Apply() {
 
       if (fieldErr) throw fieldErr
       setFields(formFields || [])
+
+      // 3. Check if user already applied
+      if (user) {
+        const { data: existingApp, error: existingErr } = await supabase
+          .from('participants')
+          .select('id')
+          .eq('programme_id', id)
+          .eq('user_id', user.id)
+          .maybeSingle()
+          
+        if (existingErr) throw existingErr
+        if (existingApp) setHasApplied(true)
+      }
 
     } catch (err) {
       console.error('Error fetching form:', err)
@@ -273,17 +287,73 @@ export default function Apply() {
           <p className="text-text-secondary">Please fill out all required fields below.</p>
         </div>
 
-        {!user && (
-          <div className="mb-8 p-4 bg-accent-subtle rounded-xl flex items-start gap-3 border border-accent/20">
-            <AlertCircle size={20} className="text-accent shrink-0 mt-0.5" />
-            <div>
-              <p className="font-medium text-accent">You are not logged in</p>
-              <p className="text-sm text-accent/80 mt-1">
-                You'll need an account to track your application. We'll ask you to log in or sign up when you submit.
-              </p>
+        {hasApplied ? (
+          <Card className="p-10 text-center max-w-lg mx-auto mt-8 animate-scale-in border-green-100">
+            <div className="w-16 h-16 bg-green-50 text-green-500 rounded-full flex items-center justify-center mx-auto mb-6">
+              <CheckCircle2 size={32} />
             </div>
-          </div>
-        )}
+            <h2 className="text-2xl font-bold mb-2 text-text-primary">Already Applied</h2>
+            <p className="text-text-secondary mb-6">
+              You have already submitted an application for this programme. You can track your status from your Participant Portal.
+            </p>
+            <div className="flex justify-center">
+              <Link to="/portal/participant" className="btn-primary">
+                Go to Participant Portal
+              </Link>
+            </div>
+          </Card>
+        ) : user && programme && user.id === programme.organizer_id ? (
+          <Card className="p-10 text-center max-w-lg mx-auto mt-8 animate-scale-in border-red-100">
+            <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6">
+              <AlertCircle size={32} />
+            </div>
+            <h2 className="text-2xl font-bold mb-2 text-text-primary">Action Not Allowed</h2>
+            <p className="text-text-secondary mb-6">
+              You are the organizer of this programme and cannot apply to it. To test the true applicant experience, please copy the application link and open it in an <strong>Incognito Window</strong>.
+            </p>
+            <div className="flex flex-col sm:flex-row justify-center gap-3">
+              <button 
+                onClick={() => {
+                  navigator.clipboard.writeText(`${window.location.origin}/programme/${id}/apply`)
+                  alert('Link copied to clipboard!')
+                }}
+                className="btn-secondary"
+              >
+                Copy Application Link
+              </button>
+              <Link to={`/dashboard/programme/${id}/applicants`} className="btn-primary">
+                Back to Dashboard
+              </Link>
+            </div>
+          </Card>
+        ) : programme?.deadline && new Date() > new Date(new Date(programme.deadline).setHours(23, 59, 59, 999)) ? (
+          <Card className="p-10 text-center max-w-lg mx-auto mt-8 animate-scale-in border-amber-100">
+            <div className="w-16 h-16 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Clock size={32} />
+            </div>
+            <h2 className="text-2xl font-bold mb-2 text-text-primary">Registration Closed</h2>
+            <p className="text-text-secondary mb-6">
+              The application deadline for this programme was <strong>{new Date(programme.deadline).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</strong>. Applications are no longer being accepted.
+            </p>
+            <div className="flex justify-center">
+              <Link to="/discover" className="btn-primary">
+                Browse Other Programmes
+              </Link>
+            </div>
+          </Card>
+        ) : (
+          <>
+            {!user && (
+              <div className="mb-8 p-4 bg-accent-subtle rounded-xl flex items-start gap-3 border border-accent/20">
+                <AlertCircle size={20} className="text-accent shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-medium text-accent">You are not logged in</p>
+                  <p className="text-sm text-accent/80 mt-1">
+                    You'll need an account to track your application. We'll ask you to log in or sign up when you submit.
+                  </p>
+                </div>
+              </div>
+            )}
 
         <Card className="p-8">
           <form onSubmit={handleSubmit} className="flex flex-col gap-8">
@@ -384,12 +454,6 @@ export default function Apply() {
                         className="input-glass"
                       />
                     )}
-                    
-                    {field.eligibility_rule && (
-                      <p className="text-xs text-text-tertiary px-1 italic">
-                        Rule: {field.eligibility_rule}
-                      </p>
-                    )}
                   </div>
                 ))}
               </div>
@@ -410,6 +474,8 @@ export default function Apply() {
             </div>
           </form>
         </Card>
+        </>
+        )}
       </div>
     </PageWrapper>
   )

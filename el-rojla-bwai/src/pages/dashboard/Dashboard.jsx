@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Plus, Users, Award, Clock, ArrowRight, Trash2, CalendarPlus, CheckCircle2 } from 'lucide-react'
+import { Plus, Users, Award, Clock, ArrowRight, Trash2, CalendarPlus, CheckCircle2, QrCode, Copy } from 'lucide-react'
 import { downloadProgrammeCalendar } from '../../lib/calendar'
 import { useAuth } from '../../hooks/useAuth'
 import { supabase } from '../../lib/supabase'
@@ -8,6 +8,8 @@ import { PageWrapper } from '../../components/layout/PageWrapper'
 import { Navbar } from '../../components/layout/Navbar'
 import { Card } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
+import { Modal } from '../../components/ui/Modal'
+import { QRCodeSVG } from 'qrcode.react'
 
 export default function Dashboard() {
   const { user } = useAuth()
@@ -15,6 +17,7 @@ export default function Dashboard() {
   const [programmes, setProgrammes] = useState([])
   const [loading, setLoading] = useState(true)
   const [stats, setStats] = useState({ total: 0, accepted: 0, pending: 0 })
+  const [qrModalProg, setQrModalProg] = useState(null)
 
   useEffect(() => {
     if (user) {
@@ -168,6 +171,13 @@ export default function Dashboard() {
                       <div className="text-sm font-medium text-text-secondary">
                         {p.selection_type === 'ai_selected' ? 'AI Selected' : 'FCFS'}
                       </div>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setQrModalProg(p) }}
+                        className="p-1.5 rounded-full text-text-tertiary hover:text-accent hover:bg-accent-subtle transition-colors"
+                        title="Share Application QR"
+                      >
+                        <QrCode size={15} />
+                      </button>
                       {(p.start_date || p.deadline) && (
                         <button
                           onClick={(e) => { e.stopPropagation(); downloadProgrammeCalendar(p) }}
@@ -187,6 +197,46 @@ export default function Dashboard() {
             </div>
           )}
         </div>
+
+        {/* QR Code Share Modal */}
+        <Modal 
+          isOpen={!!qrModalProg} 
+          onClose={() => setQrModalProg(null)} 
+          title="Share Application Link"
+        >
+          {qrModalProg && (
+            <div className="flex flex-col items-center text-center">
+              <p className="text-text-secondary mb-6 text-sm">
+                Have applicants scan this QR code to apply directly to <br /><strong>{qrModalProg.title}</strong>.
+              </p>
+              
+              <div className="p-4 bg-white rounded-2xl shadow-sm border border-glass-border mb-6">
+                <QRCodeSVG 
+                  value={`${window.location.origin}/programme/${qrModalProg.id}/apply`}
+                  size={200}
+                  level="H"
+                  includeMargin={true}
+                />
+              </div>
+
+              <div className="w-full flex items-center justify-between p-3 bg-black/5 rounded-lg border border-black/5 overflow-hidden">
+                <span className="text-xs text-text-secondary truncate mr-2 font-mono flex-1 text-left">
+                  {`${window.location.origin}/programme/${qrModalProg.id}/apply`}
+                </span>
+                <button 
+                  onClick={() => {
+                    navigator.clipboard.writeText(`${window.location.origin}/programme/${qrModalProg.id}/apply`)
+                    alert('Link copied to clipboard!')
+                  }}
+                  className="p-2 bg-white rounded-md shadow-sm text-text-secondary hover:text-accent transition-colors shrink-0"
+                  title="Copy Link"
+                >
+                  <Copy size={16} />
+                </button>
+              </div>
+            </div>
+          )}
+        </Modal>
       </div>
     </PageWrapper>
   )
