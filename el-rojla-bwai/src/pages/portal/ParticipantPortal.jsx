@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Calendar, Clock, Star, MessageSquare, CalendarPlus } from 'lucide-react'
+import { Calendar, Clock, Star, MessageSquare, CalendarPlus, ChevronLeft, ChevronRight } from 'lucide-react'
 import { downloadMatchSession } from '../../lib/calendar'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../hooks/useAuth'
@@ -9,6 +9,104 @@ import { Navbar } from '../../components/layout/Navbar'
 import { Card } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
 import { Modal } from '../../components/ui/Modal'
+
+// ---- Mini Calendar Component ----
+function MiniCalendar({ programme, sessions }) {
+  const [viewDate, setViewDate] = useState(new Date())
+  
+  const year = viewDate.getFullYear()
+  const month = viewDate.getMonth()
+  const today = new Date()
+  
+  // Build calendar grid
+  const firstDay = new Date(year, month, 1).getDay()
+  const daysInMonth = new Date(year, month + 1, 0).getDate()
+  const monthName = viewDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+  const dayNames = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']
+  
+  // Collect marked dates
+  const markedDates = {}
+  if (programme?.start_date) {
+    const d = programme.start_date.substring(0, 10)
+    markedDates[d] = { color: '#7F77DD', label: 'Event Day' }
+  }
+  sessions?.forEach(s => {
+    if (s.session_date) {
+      const d = s.session_date.substring(0, 10)
+      markedDates[d] = { color: '#30D1BC', label: 'Session' }
+    }
+  })
+
+  const prevMonth = () => setViewDate(new Date(year, month - 1, 1))
+  const nextMonth = () => setViewDate(new Date(year, month + 1, 1))
+  
+  // Build grid cells
+  const cells = []
+  for (let i = 0; i < firstDay; i++) cells.push(null)
+  for (let d = 1; d <= daysInMonth; d++) cells.push(d)
+  
+  const isToday = (d) => d === today.getDate() && month === today.getMonth() && year === today.getFullYear()
+  const dateStr = (d) => `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`
+
+  return (
+    <Card className="p-4">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-3">
+        <button onClick={prevMonth} className="p-1 rounded-lg hover:bg-black/5 text-text-secondary transition-colors">
+          <ChevronLeft size={14} />
+        </button>
+        <h4 className="text-xs font-semibold text-text-primary tracking-wide">{monthName}</h4>
+        <button onClick={nextMonth} className="p-1 rounded-lg hover:bg-black/5 text-text-secondary transition-colors">
+          <ChevronRight size={14} />
+        </button>
+      </div>
+      
+      {/* Day names */}
+      <div className="grid grid-cols-7 gap-0 mb-1">
+        {dayNames.map(d => (
+          <div key={d} className="text-center text-[9px] font-medium text-text-tertiary py-1">{d}</div>
+        ))}
+      </div>
+      
+      {/* Days grid */}
+      <div className="grid grid-cols-7 gap-0">
+        {cells.map((day, i) => {
+          if (day === null) return <div key={`empty-${i}`} />
+          const ds = dateStr(day)
+          const mark = markedDates[ds]
+          const todayClass = isToday(day)
+          
+          return (
+            <div key={i} className="flex flex-col items-center py-1">
+              <div
+                className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-medium transition-colors ${
+                  todayClass 
+                    ? 'bg-accent text-white' 
+                    : 'text-text-primary hover:bg-black/5'
+                }`}
+              >
+                {day}
+              </div>
+              {mark && (
+                <div 
+                  className="w-1 h-1 rounded-full mt-0.5" 
+                  style={{ backgroundColor: mark.color }}
+                  title={mark.label}
+                />
+              )}
+            </div>
+          )
+        })}
+      </div>
+      
+      {/* Legend dots */}
+      <div className="flex flex-wrap gap-x-3 gap-y-1 mt-3 pt-3 border-t border-glass-border">
+        {programme?.start_date && <span className="flex items-center gap-1 text-[9px] text-text-tertiary"><span className="w-1.5 h-1.5 rounded-full bg-[#7F77DD]" />Event Day</span>}
+        {sessions?.length > 0 && <span className="flex items-center gap-1 text-[9px] text-text-tertiary"><span className="w-1.5 h-1.5 rounded-full bg-[#30D1BC]" />Session</span>}
+      </div>
+    </Card>
+  )
+}
 
 export default function ParticipantPortal() {
   const { user } = useAuth()
@@ -147,8 +245,16 @@ export default function ParticipantPortal() {
           <Card className={`p-6 border-l-4 ${participant.status === 'accepted' ? 'border-l-green-500' : participant.status === 'rejected' ? 'border-l-red-500' : 'border-l-amber-500'}`}>
             <div className="flex justify-between items-start">
               <div>
-                <h2 className="text-xl font-bold mb-1">{programme?.title}</h2>
-                <p className="text-text-secondary">Application Status: <span className="font-semibold capitalize">{participant.status}</span></p>
+                <h2 className="text-xl font-bold mb-2">{programme?.title}</h2>
+                <div className="flex items-center gap-4 text-sm text-text-secondary">
+                  <p>Application Status: <span className="font-semibold capitalize">{participant.status}</span></p>
+                  {programme && (
+                    <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-black/5 font-medium">
+                      <Calendar size={14} className="text-accent" /> 
+                      {new Date(programme.start_date).toLocaleDateString()}
+                    </div>
+                  )}
+                </div>
               </div>
               <Badge variant={participant.status === 'accepted' ? 'green' : participant.status === 'rejected' ? 'red' : 'amber'}>
                 {participant.status.toUpperCase()}
@@ -156,8 +262,8 @@ export default function ParticipantPortal() {
             </div>
           </Card>
 
-          {participant.status === 'accepted' && (
-            <div className="grid md:grid-cols-3 gap-6">
+
+          <div className="grid md:grid-cols-3 gap-6">
               {/* Mentor Column */}
               <div className="md:col-span-1 flex flex-col gap-6">
                 <Card className="p-6">
@@ -202,6 +308,9 @@ export default function ParticipantPortal() {
                     </button>
                   </Card>
                 )}
+
+                {/* Mini Calendar */}
+                <MiniCalendar programme={programme} sessions={sessions} />
               </div>
 
               {/* Sessions Column */}
@@ -240,9 +349,8 @@ export default function ParticipantPortal() {
                     </div>
                   )}
                 </Card>
-              </div>
             </div>
-          )}
+          </div>
         </div>
       </div>
 
