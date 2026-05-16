@@ -26,6 +26,11 @@ export default function Matching() {
   const [newMentor, setNewMentor] = useState({ name: '', email: '', bio: '', tags: '' })
   const [notification, setNotification] = useState(null)
 
+  const showNotification = (msg) => {
+    setNotification(msg)
+    setTimeout(() => setNotification(null), 4000)
+  }
+
   useEffect(() => {
     fetchData()
   }, [id])
@@ -46,9 +51,28 @@ export default function Matching() {
 
       // 3. Fetch mentors
       const { data: mnts } = await supabase.from('mentors').select('*').eq('programme_id', id)
-      // Fake mentors for demo if none exist
-      const loadedMentors = mnts?.length > 0 ? mnts : generateDemoMentors(id)
-      setMentors(loadedMentors)
+      
+      if (mnts && mnts.length > 0) {
+        setMentors(mnts)
+      } else {
+        // Seed demo mentors into the database to ensure valid UUIDs and foreign keys
+        const demoMentors = [
+          { programme_id: id, name: 'Dr. Sarah Chen', bio: 'Former VP Eng at Stripe. Expert in fintech scaling.', expertise_tags: ['fintech', 'scaling', 'engineering'] },
+          { programme_id: id, name: 'James Wilson', bio: 'Partner at Sequoia. Focuses on B2B SaaS GTM strategies.', expertise_tags: ['b2b', 'saas', 'gtm', 'fundraising'] },
+          { programme_id: id, name: 'Elena Rodriguez', bio: 'AI researcher and founder. YC alumni.', expertise_tags: ['ai', 'machine-learning', 'early-stage'] },
+          { programme_id: id, name: 'Marcus Dubois', bio: 'Serial entrepreneur. Built and sold two ed-tech platforms.', expertise_tags: ['ed-tech', 'product-market-fit', 'bootstrapping'] },
+          { programme_id: id, name: 'Anita Patel', bio: 'Chief Sustainability Officer. Specializes in cleantech and circular economy.', expertise_tags: ['cleantech', 'sustainability', 'hardware'] },
+          { programme_id: id, name: 'David Kim', bio: 'Growth hacker and marketer. Helped scale multiple consumer apps to 1M+ users.', expertise_tags: ['growth-marketing', 'b2c', 'user-acquisition'] }
+        ]
+        const { data: insertedMentors, error: seedError } = await supabase.from('mentors').insert(demoMentors).select('*')
+        
+        if (seedError) {
+          console.error("Failed to seed demo mentors:", seedError)
+          setMentors([])
+        } else {
+          setMentors(insertedMentors || [])
+        }
+      }
 
       // 4. Fetch existing matches
       const { data: existingMatches } = await supabase.from('matches').select('*').eq('programme_id', id)
@@ -61,24 +85,42 @@ export default function Matching() {
     }
   }
 
-  const generateDemoMentors = (progId) => {
-    return [
-      { id: 'm1', programme_id: progId, name: 'Dr. Sarah Chen', bio: 'Former VP Eng at Stripe. Expert in fintech scaling.', expertise_tags: ['fintech', 'scaling', 'engineering'] },
-      { id: 'm2', programme_id: progId, name: 'James Wilson', bio: 'Partner at Sequoia. Focuses on B2B SaaS GTM strategies.', expertise_tags: ['b2b', 'saas', 'gtm', 'fundraising'] },
-      { id: 'm3', programme_id: progId, name: 'Elena Rodriguez', bio: 'AI researcher and founder. YC alumni.', expertise_tags: ['ai', 'machine-learning', 'early-stage'] }
-    ]
-  }
-
   const handleGenerateMatches = async (participantId) => {
     setGeneratingFor(participantId)
     const p = participants.find(x => x.id === participantId)
     
     try {
-      // Call Gemini API
-      const suggestions = await generateMatches(p, mentors, programme?.match_criteria)
+      // 1. Fetch historical data (past applications by this user in other programmes)
+      let historicalData = null;
+      if (p.user_id) {
+        const { data: pastRecords } = await supabase
+          .from('participants')
+          .select('programme_id, ai_summary, ai_tags, form_answers, status')
+          .eq('user_id', p.user_id)
+          .neq('programme_id', id)
+        
+        if (pastRecords && pastRecords.length > 0) {
+          historicalData = pastRecords;
+          console.log("Found historical ecosystem data for user:", pastRecords);
+        }
+      }
+
+      // 2. Call Gemini API
+      const rawSuggestions = await generateMatches(p, mentors, programme?.match_criteria, historicalData)
       
       // Save suggested matches to Supabase
-      if (suggestions && suggestions.length > 0) {
+      if (rawSuggestions && rawSuggestions.length > 0) {
+        // Enforce uniqueness and strict Top 3 limit (in case AI ignores the prompt rule)
+        const uniqueSuggestions = []
+        const seenMentors = new Set()
+        for (const s of rawSuggestions) {
+          if (!seenMentors.has(s.mentor_id) && mentors.some(m => m.id === s.mentor_id)) {
+            seenMentors.add(s.mentor_id)
+            uniqueSuggestions.push(s)
+          }
+        }
+        const suggestions = uniqueSuggestions.slice(0, 3)
+
         const inserts = suggestions.map(s => ({
           programme_id: id,
           participant_id: participantId,
@@ -88,22 +130,29 @@ export default function Matching() {
           status: 'suggested'
         }))
 
-        // We ideally delete old suggestions first, but for demo just insert/update
+        // Delete old unconfirmed suggestions first to prevent duplication
+        await supabase
+          .from('matches')
+          .delete()
+          .eq('participant_id', participantId)
+          .eq('status', 'suggested')
+
         const { error } = await supabase.from('matches').insert(inserts)
         if (!error) {
-          // Update local state
-          const newMatches = [...matches.filter(m => m.participant_id !== participantId), ...inserts]
+          // Update local state (filtering out the old ones just in case)
+          const newMatches = [...matches.filter(m => m.participant_id !== participantId || m.status === 'confirmed'), ...inserts]
           setMatches(newMatches)
+          showNotification("AI Matches successfully generated!")
         } else {
           console.error("Supabase insert error:", error)
-          alert("Matches generated but failed to save to database.")
+          showNotification("Error: Matches generated but failed to save to database.")
         }
       } else {
-        alert("The AI could not find any suitable mentors, or an error occurred during analysis. Try adding more detailed mentors.")
+        showNotification("Error: The AI could not find any suitable mentors.")
       }
     } catch (err) {
       console.error('Error generating matches:', err)
-      alert('Error generating matches: ' + err.message)
+      showNotification('Error generating matches: ' + err.message)
     } finally {
       setGeneratingFor(null)
     }
@@ -118,28 +167,35 @@ export default function Matching() {
 
   const confirmMatch = async (match) => {
     try {
-      // 1. Update the confirmed match
-      await supabase.from('matches').update({ status: 'confirmed' }).eq('id', match.id)
+      // 1. Update the chosen match to 'confirmed' in the DB
+      const { error: confirmError } = await supabase
+        .from('matches')
+        .update({ status: 'confirmed' })
+        .eq('id', match.id)
+        
+      if (confirmError) throw confirmError;
       
-      // 2. Reject other suggestions for this participant
-      // In a real app we'd have IDs for all suggestions, here we simulate it in local state
+      // 2. Delete all OTHER 'suggested' matches for this participant from the DB
+      await supabase
+        .from('matches')
+        .delete()
+        .eq('participant_id', match.participant_id)
+        .eq('status', 'suggested')
+        .neq('id', match.id) // keep the one we just confirmed (though it's status is already confirmed now)
       
-      const newMatches = matches.map(m => {
-        if (m.participant_id === match.participant_id) {
-          return m.mentor_id === match.mentor_id 
-            ? { ...m, status: 'confirmed' } 
-            : { ...m, status: 'rejected' }
-        }
-        return m
-      }).filter(m => m.status === 'confirmed' || m.status === 'suggested')
+      // 3. Update local UI state
+      const newMatches = matches.filter(m => 
+        m.id === match.id || 
+        (m.participant_id !== match.participant_id && m.status !== 'rejected')
+      ).map(m => m.id === match.id ? { ...m, status: 'confirmed' } : m)
       
       setMatches(newMatches)
       
-      // 3. Simulate email dispatch
-      setNotification(`Confirmation emails sent to ${match.participant_name} and ${match.mentor_name}!`)
-      setTimeout(() => setNotification(null), 4000)
+      // 4. Simulate email dispatch
+      showNotification(`Confirmation emails sent to ${match.participant_name || 'Participant'} and ${mentors.find(m => m.id === match.mentor_id)?.name}!`)
     } catch (err) {
       console.error('Failed to confirm match', err)
+      showNotification("Failed to confirm match. Please try again.")
     }
   }
 
@@ -159,10 +215,10 @@ export default function Matching() {
       setMentors([...mentors, data])
       setIsMentorModalOpen(false)
       setNewMentor({ name: '', email: '', bio: '', tags: '' })
-      alert('Mentor successfully added! You can now generate matches for them.')
+      showNotification('Mentor successfully added!')
     } catch (err) {
       console.error('Failed to add mentor:', err)
-      alert('Failed to add mentor. Ensure the user email exists in auth, or just use the generated demo mentors for now.')
+      showNotification('Failed to add mentor. Ensure the user email exists.')
     }
   }
 

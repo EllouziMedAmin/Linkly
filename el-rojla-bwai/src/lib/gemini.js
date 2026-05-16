@@ -94,7 +94,7 @@ Rules:
   }
 }
 
-export async function generateMatches(participant, mentors, matchCriteria) {
+export async function generateMatches(participant, mentors, matchCriteria, historicalData = null) {
   const mentorList = mentors.map(m => ({
     id: m.id,
     name: m.name,
@@ -102,14 +102,21 @@ export async function generateMatches(participant, mentors, matchCriteria) {
     tags: m.expertise_tags
   }))
 
-  const prompt = `You are a matching engine. Match this participant to the best mentors.
-Return ONLY valid JSON array.
+  const prompt = `You are an expert AI matching engine for the Lyncly ecosystem. Match this participant to the best mentors.
+Return ONLY a valid JSON array.
 
+=== 1st Degree Data (Current Application) ===
 Participant summary: ${participant.ai_summary || 'No summary available'}
 Participant tags: ${JSON.stringify(participant.ai_tags || [])}
-Programme matching criteria: ${JSON.stringify(matchCriteria || {})}
+Form answers: ${JSON.stringify(participant.form_answers || {})}
 
-Mentors:
+=== Ecosystem Historical Data ===
+${historicalData ? JSON.stringify(historicalData) : 'No historical data available. This is a first-time user.'}
+
+=== Programme Context ===
+Matching criteria: ${JSON.stringify(matchCriteria || {})}
+
+=== Available Mentors ===
 ${JSON.stringify(mentorList)}
 
 Return exactly this format:
@@ -118,10 +125,10 @@ Return exactly this format:
 ]
 
 Rules:
-- Return top 3 only, sorted by score descending
-- score must be 0-100 integer
-- reason must be a single concise sentence
-- mentor_id must be an exact ID from the list above`
+- Return top 3 matches only, sorted by score descending.
+- score must be an integer 0-100.
+- reason must be a single concise sentence. If historical data was used, mention it (e.g. "Aligns with their current goals and builds on their past session with Mentor X").
+- mentor_id must be an exact ID from the list provided.`
 
   try {
     const result = await model.generateContent(prompt)

@@ -16,6 +16,7 @@ import Matching from './pages/dashboard/Matching'
 import Analytics from './pages/dashboard/Analytics'
 import ParticipantPortal from './pages/portal/ParticipantPortal'
 import MentorPortal from './pages/portal/MentorPortal'
+import Community from './pages/Community'
 
 // Protected Route Wrapper
 function ProtectedRoute({ children }) {
@@ -50,6 +51,7 @@ export default function App() {
           <Route path="/auth/signup" element={<Signup />} />
           
           <Route path="/discover" element={<Discover />} />
+          <Route path="/community" element={<Community />} />
           <Route path="/programme/:id" element={<ProgrammeDetail />} />
           <Route path="/programme/:id/apply" element={<Apply />} />
 

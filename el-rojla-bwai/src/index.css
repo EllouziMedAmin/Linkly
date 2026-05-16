@@ -492,3 +492,13 @@ select.input-glass {
   color: var(--text-secondary);
   font-weight: 400;
 }
+
+/* ---- Utilities ---- */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}

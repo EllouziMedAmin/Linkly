@@ -25,6 +25,9 @@ export function Navbar() {
           <Link to="/discover" className="text-sm font-medium text-text-secondary hover:text-text-primary transition-colors">
             Discover Programmes
           </Link>
+          <Link to="/community" className="text-sm font-medium text-text-secondary hover:text-text-primary transition-colors">
+            Community
+          </Link>
 
           {user ? (
             <div className="flex items-center gap-4">
