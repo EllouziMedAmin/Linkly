@@ -28,8 +28,11 @@ export function Navbar() {
 
           {user ? (
             <div className="flex items-center gap-4">
+              <Link to="/portal/participant" className="text-sm font-medium text-text-secondary hover:text-text-primary transition-colors">
+                My Portal
+              </Link>
               <Link to="/dashboard" className="text-sm font-medium text-text-secondary hover:text-text-primary transition-colors">
-                Dashboard
+                Organizer
               </Link>
               <div className="h-4 w-px bg-glass-border"></div>
               <button 
