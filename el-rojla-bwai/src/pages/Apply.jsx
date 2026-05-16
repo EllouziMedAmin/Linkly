@@ -1,0 +1,321 @@
+import React, { useEffect, useState } from 'react'
+import { useParams, useNavigate, Link } from 'react-router-dom'
+import { useAuth } from '../hooks/useAuth'
+import { supabase } from '../lib/supabase'
+import { enrichProfile } from '../lib/gemini'
+import { PageWrapper } from '../components/layout/PageWrapper'
+import { Navbar } from '../components/layout/Navbar'
+import { Card } from '../components/ui/Card'
+import { AlertCircle, CheckCircle2, ArrowRight } from 'lucide-react'
+
+export default function Apply() {
+  const { id } = useParams()
+  const navigate = useNavigate()
+  const { user } = useAuth()
+  
+  const [programme, setProgramme] = useState(null)
+  const [fields, setFields] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [submitting, setSubmitting] = useState(false)
+  const [success, setSuccess] = useState(false)
+  const [error, setError] = useState(null)
+
+  // Standard fields
+  const [name, setName] = useState(user?.user_metadata?.name || '')
+  const [email, setEmail] = useState(user?.email || '')
+  const [profileType, setProfileType] = useState('startup')
+  
+  // Custom form answers
+  const [answers, setAnswers] = useState({})
+
+  useEffect(() => {
+    fetchForm()
+  }, [id])
+
+  const fetchForm = async () => {
+    try {
+      // 1. Get programme details
+      const { data: prog, error: progErr } = await supabase
+        .from('programmes')
+        .select('*')
+        .eq('id', id)
+        .single()
+      
+      if (progErr) throw progErr
+      setProgramme(prog)
+
+      // 2. Get custom fields for this programme
+      const { data: formFields, error: fieldErr } = await supabase
+        .from('form_fields')
+        .select('*')
+        .eq('programme_id', id)
+        .order('field_order', { ascending: true })
+
+      if (fieldErr) throw fieldErr
+      setFields(formFields || [])
+
+    } catch (err) {
+      console.error('Error fetching form:', err)
+      setError('Could not load registration form')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleInputChange = (fieldId, value) => {
+    setAnswers(prev => ({
+      ...prev,
+      [fieldId]: value
+    }))
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    
+    if (!user) {
+      // Prompt to login, saving state (simplified for demo: redirect to login)
+      navigate(`/auth/login?redirect=/programme/${id}/apply`)
+      return
+    }
+
+    setSubmitting(true)
+    setError(null)
+
+    try {
+      // 1. Call Gemini to enrich the profile based on answers
+      const allAnswers = {
+        name,
+        email,
+        profileType,
+        ...answers // Map field IDs to actual labels if needed, but Gemini handles JSON well
+      }
+      
+      const aiEnrichment = await enrichProfile(allAnswers, programme.description)
+      
+      // Determine initial status based on programme selection type
+      let initialStatus = 'pending'
+      if (programme.selection_type === 'fcfs') {
+        // Here we'd ideally check spots_left via a transaction, but assuming yes for now
+        initialStatus = 'accepted'
+      }
+
+      // 2. Save participant to Supabase
+      const { error: insertErr } = await supabase
+        .from('participants')
+        .insert({
+          programme_id: id,
+          user_id: user.id,
+          name,
+          email,
+          profile_type: profileType,
+          form_answers: answers,
+          ai_summary: aiEnrichment.summary,
+          ai_tags: aiEnrichment.tags,
+          ai_score: aiEnrichment.score,
+          status: initialStatus
+        })
+
+      if (insertErr) {
+        if (insertErr.code === '23505') {
+          throw new Error('You have already applied to this programme.')
+        }
+        throw insertErr
+      }
+
+      // Success!
+      setSuccess(true)
+
+    } catch (err) {
+      console.error('Submission error:', err)
+      setError(err.message || 'Failed to submit application')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <PageWrapper>
+        <Navbar />
+        <div className="container-narrow py-20 flex justify-center">
+          <div className="w-8 h-8 rounded-full border-2 border-accent border-t-transparent animate-spin" />
+        </div>
+      </PageWrapper>
+    )
+  }
+
+  if (success) {
+    return (
+      <PageWrapper>
+        <Navbar />
+        <div className="container-narrow py-20">
+          <Card className="p-10 text-center max-w-lg mx-auto animate-scale-in">
+            <div className="w-16 h-16 bg-green-50 text-green-500 rounded-full flex items-center justify-center mx-auto mb-6">
+              <CheckCircle2 size={32} />
+            </div>
+            <h2 className="text-2xl font-bold mb-2">Application Received!</h2>
+            <p className="text-text-secondary mb-8">
+              {programme.selection_type === 'fcfs' 
+                ? "You've been successfully registered for this programme. Check your portal for details."
+                : "Your application is under review. You'll be notified once a decision is made."}
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Link to="/portal/participant" className="btn-primary">
+                Go to Portal
+              </Link>
+              <Link to="/discover" className="btn-secondary">
+                Browse More
+              </Link>
+            </div>
+          </Card>
+        </div>
+      </PageWrapper>
+    )
+  }
+
+  return (
+    <PageWrapper>
+      <Navbar />
+      <div className="container-narrow py-12">
+        <Link to={`/programme/${id}`} className="text-text-secondary hover:text-text-primary flex items-center gap-2 font-medium mb-6">
+          ← Back to programme
+        </Link>
+
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold mb-2">Apply for {programme?.title}</h1>
+          <p className="text-text-secondary">Please fill out all required fields below.</p>
+        </div>
+
+        {!user && (
+          <div className="mb-8 p-4 bg-accent-subtle rounded-xl flex items-start gap-3 border border-accent/20">
+            <AlertCircle size={20} className="text-accent shrink-0 mt-0.5" />
+            <div>
+              <p className="font-medium text-accent">You are not logged in</p>
+              <p className="text-sm text-accent/80 mt-1">
+                You'll need an account to track your application. We'll ask you to log in or sign up when you submit.
+              </p>
+            </div>
+          </div>
+        )}
+
+        <Card className="p-8">
+          <form onSubmit={handleSubmit} className="flex flex-col gap-8">
+            {error && (
+              <div className="p-4 bg-red-50 text-red-600 rounded-xl text-sm flex items-start gap-3 border border-red-100">
+                <AlertCircle size={18} className="shrink-0 mt-0.5" />
+                <p>{error}</p>
+              </div>
+            )}
+
+            {/* Standard Profile Fields */}
+            <div className="flex flex-col gap-5 pb-8 border-b border-glass-border">
+              <h3 className="font-semibold text-lg">Basic Information</h3>
+              
+              <div className="grid sm:grid-cols-2 gap-5">
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-medium text-text-secondary px-1">Full Name *</label>
+                  <input
+                    type="text"
+                    required
+                    value={name}
+                    onChange={e => setName(e.target.value)}
+                    className="input-glass"
+                  />
+                </div>
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-medium text-text-secondary px-1">Email Address *</label>
+                  <input
+                    type="email"
+                    required
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    className="input-glass"
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-medium text-text-secondary px-1">Applying As *</label>
+                <select
+                  required
+                  value={profileType}
+                  onChange={e => setProfileType(e.target.value)}
+                  className="input-glass"
+                >
+                  <option value="startup">Startup / Company</option>
+                  <option value="team">Team / Project</option>
+                  <option value="individual">Individual</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Custom Organizer Fields */}
+            {fields.length > 0 && (
+              <div className="flex flex-col gap-5">
+                <h3 className="font-semibold text-lg">Programme Questions</h3>
+                
+                {fields.map(field => (
+                  <div key={field.id} className="flex flex-col gap-2">
+                    <label className="text-sm font-medium text-text-secondary px-1">
+                      {field.label} {field.required && '*'}
+                    </label>
+                    
+                    {field.field_type === 'textarea' ? (
+                      <textarea
+                        required={field.required}
+                        value={answers[field.id] || ''}
+                        onChange={e => handleInputChange(field.id, e.target.value)}
+                        className="input-glass"
+                        rows={4}
+                      />
+                    ) : field.field_type === 'select' ? (
+                      <select
+                        required={field.required}
+                        value={answers[field.id] || ''}
+                        onChange={e => handleInputChange(field.id, e.target.value)}
+                        className="input-glass"
+                      >
+                        <option value="">Select an option...</option>
+                        {field.options?.map(opt => (
+                          <option key={opt} value={opt}>{opt}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <input
+                        type={field.field_type === 'number' ? 'number' : field.field_type === 'url' ? 'url' : 'text'}
+                        required={field.required}
+                        value={answers[field.id] || ''}
+                        onChange={e => handleInputChange(field.id, e.target.value)}
+                        className="input-glass"
+                      />
+                    )}
+                    
+                    {field.eligibility_rule && (
+                      <p className="text-xs text-text-tertiary px-1 italic">
+                        Rule: {field.eligibility_rule}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="pt-4 border-t border-glass-border">
+              <button 
+                type="submit" 
+                className="btn-primary w-full sm:w-auto"
+                disabled={submitting}
+              >
+                {submitting ? 'Processing...' : 'Submit Application'}
+                {!submitting && <ArrowRight size={16} />}
+              </button>
+              <p className="text-xs text-text-tertiary mt-3 text-center sm:text-left">
+                By submitting, your application will be analyzed by our AI for optimal matching and scoring.
+              </p>
+            </div>
+          </form>
+        </Card>
+      </div>
+    </PageWrapper>
+  )
+}
