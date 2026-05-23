@@ -1,5 +1,5 @@
-# Lyncly 🚀
-### *Programmable Ecosystem Linkages (V3 Dense Architecture)*
+# Linkly 🚀
+### *AI-Native Ecosystem Visualization & Matching Platform*
 
 <div align="center">
 
@@ -7,7 +7,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=flat&logo=typescript)](https://www.typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4-38B2AC?style=flat&logo=tailwind-css)](https://tailwindcss.com/)
 [![Supabase](https://img.shields.io/badge/Database-Supabase-3ECF8E?style=flat&logo=supabase)](https://supabase.com/)
-[![Gemini AI](https://img.shields.io/badge/AI-Gemini_Flash-8E75B2?style=flat&logo=google)](https://deepmind.google/technologies/gemini/)
+[![Gemini AI](https://img.shields.io/badge/AI-Gemini-8E75B2?style=flat&logo=google)](https://deepmind.google/technologies/gemini/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 </div>
@@ -15,51 +15,49 @@
 **`Documentation`** | **`API Reference`** | **`Governance Hub`**
 ------------------- | ------------------- | --------------------
 
-**Lyncly** is a decentralized, ecosystem-agnostic data pipeline infrastructure designed to bridge the gap between startups, mentors, accelerators, universities, and venture capital. 
+## 📖 Elevator Pitch
+Managing startup ecosystems, mentorship networks, and program linkages relies heavily on manual coordination and fragmented data, leading to inefficient matching and missed opportunities.
 
-Originally built as a project for the **Cradle Build with AI 2026 KL · MyHack Challenge**, Lyncly has evolved into a robust open-source platform that enables any ecosystem partner to funnel data into a centralized hub using typed, secure, and context-aware endpoints powered by **Gemini AI**.
+**Linkly** is an AI-native ecosystem visualization and matching platform that transforms decentralized data into actionable, high-performance network graphs. By leveraging agentic AI for automated data ingestion and an intelligent matching engine, Linkly eliminates manual bottlenecks and database duplicates. Our platform provides program organizers with a dynamic, modular registry, automated QR-based application intake, and real-time health monitoring of ecosystem relationships. We deliver unique, top-tier match suggestions, replacing manual coordination with a scalable, self-improving infrastructure that accelerates startup success and optimizes resource allocation.
 
 ---
 
 ## 🎯 The Vision
-Innovation ecosystem platforms currently depend on manual, ad-hoc coordination. **Lyncly** transforms these fragile relationships into **First-Class, Programmable Entities**. 
+Innovation ecosystem platforms currently depend on manual, ad-hoc coordination. **Linkly** transforms these fragile relationships into **First-Class, Programmable Entities**. 
 
 Every connection in our system is a **Linkage Object** with its own lifecycle, behavioral DNA, friction allocation, and a direct tie-in to financial governance.
 
 ---
 
-## ✨ Advanced AI Mechanics (Our Moat)
+## ✨ Core Features & AI Mechanics
 
-### ⚖️ The "Friction Token" Economy
-Gemini 3.1 Flash-Lite analyzes a startup's pitch deck for cohesion and assigns a **Friction Score**. Mentors have a max "Friction Capacity". This mathematically prevents mentor burnout by ensuring no mentor is overloaded with chaotic, high-friction startups.
+### 🧬 Intelligent Ecosystem Matching Engine
+We move beyond greedy matching. Our advanced AI matching engine computes similarity across the *entire* cohort, limiting match suggestions to unique, top-tier results. Strict deduplication logic ensures robust database integrity and a seamless user experience for program organizers.
 
-### 🧬 Global Bipartite DNA Matching
-We move beyond greedy matching. We compute a massive similarity matrix using **Vertex AI** across the *entire* cohort, applying a Bipartite Graph algorithm to optimize the aggregate health of the ecosystem.
+### 📊 Decentralized Ecosystem Visualization
+Linkly ingests diverse, decentralized data pipelines using AI-driven ingestion (Gemini) into a modular registry. This data is visualized through a high-performance, responsive radial-to-network graph, allowing for intuitive relationship management and professional display of ecosystem dynamics.
 
-### 💰 Automated Grant Pausing (The Cradle Tie-in)
-We tie financial disbursements directly to ecosystem health. If the AI detects a drop in engagement via our **1-Click Micro-Pulse Checks**, it autonomously triggers a `grant_lock_status`, pausing Cradle Fund disbursements until an Admin intervenes. We protect the money.
+### 📱 Automated QR-Based Application Intake
+A streamlined recruitment process for organizers. The automated application intake flow features shareable QR codes that direct potential applicants to specific program application pages, fully integrated into the existing dashboard.
 
-### 🤖 The "Cold Start" Synthetic Simulator
-We bypass the "empty database" problem on Day 1 by using Gemini to generate 500 synthetic historical Linkages, instantly giving Vertex AI a deep embedding space to query against.
+### ⚖️ "Friction Token" Economy & Behavioral DNA
+Gemini analyzes a startup's profile for cohesion and assigns a **Friction Score**. Mentors have a max "Friction Capacity". This mathematically prevents mentor burnout by ensuring no mentor is overloaded with chaotic, high-friction startups.
+
+### 💰 Automated Grant Pausing & Health Monitoring
+We tie financial disbursements directly to ecosystem health. If the AI detects a drop in engagement via automated health monitoring, it can autonomously pause disbursements until an Admin intervenes.
+
+### 🤖 Synthetic Pre-training Simulator
+We bypass the "empty database" problem by using Gemini to generate synthetic historical Linkages, instantly providing a deep embedding space to train and query against from Day 1.
 
 ---
 
 ## 🛠️ Tech Stack
-- **Frontend:** React + TailwindCSS
-- **Backend:** Node.js + Express (Bipartite Algorithms)
+- **Frontend:** Next.js (React) + TailwindCSS
+- **Backend:** Node.js + Express
 - **Database:** Supabase (PostgreSQL)
 - **AI Core:** 
-  - Google Gemini 3.1 Flash-Lite (Verification & Friction Scoring)
+  - Google Gemini (Data Ingestion, Verification & Friction Scoring)
   - Vertex AI Matching Engine (Vector Embeddings)
-
----
-
-## 🚀 48-Hour Hackathon Roadmap
-- [x] **Phase 1:** Supabase Schema & Synthetic Data Simulator
-- [x] **Phase 2:** Gemini-powered Agentic Onboarding & Friction Scoring
-- [x] **Phase 3:** Vertex AI Bipartite Matching Engine
-- [x] **Phase 4:** Cradle Grant Pausing Logic & 1-Click Micro-Pulse Emails
-- [x] **Phase 5:** Interactive Network Graph Visualization
 
 ---
 
@@ -67,4 +65,4 @@ We bypass the "empty database" problem on Day 1 by using Gemini to generate 500 
 Built with passion for the **Build with AI 2026** Hackathon.
 
 ---
-*Lyncly: The engine that makes every connection programmable.*
+*Linkly: The engine that makes every connection programmable.*
