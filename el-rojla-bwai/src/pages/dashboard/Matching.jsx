@@ -137,10 +137,10 @@ export default function Matching() {
           .eq('participant_id', participantId)
           .eq('status', 'suggested')
 
-        const { error } = await supabase.from('matches').insert(inserts)
+        const { data: insertedData, error } = await supabase.from('matches').insert(inserts).select()
         if (!error) {
-          // Update local state (filtering out the old ones just in case)
-          const newMatches = [...matches.filter(m => m.participant_id !== participantId || m.status === 'confirmed'), ...inserts]
+          // Update local state with the actual data from DB (which includes the IDs)
+          const newMatches = [...matches.filter(m => m.participant_id !== participantId || m.status === 'confirmed'), ...insertedData]
           setMatches(newMatches)
           showNotification("AI Matches successfully generated!")
         } else {
