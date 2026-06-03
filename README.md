@@ -54,7 +54,7 @@ We bypass the "empty database" problem on Day 1 by using Gemini to generate 500 
 
 ---
 
-## 🚀 48-Hour Hackathon Roadmap
+## 🚀 24-Hour Hackathon Roadmap
 - [x] **Phase 1:** Supabase Schema & Synthetic Data Simulator
 - [x] **Phase 2:** Gemini-powered Agentic Onboarding & Friction Scoring
 - [x] **Phase 3:** Vertex AI Bipartite Matching Engine
