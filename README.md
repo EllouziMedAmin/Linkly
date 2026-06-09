@@ -1,6 +1,8 @@
 # Lyncly 🚀
 ### *Programmable Ecosystem Linkages (V3 Dense Architecture)*
 
+<video src="lyncly.mp4" controls width="100%"></video>
+
 <div align="center">
 
 [![Next.js](https://img.shields.io/badge/Next.js-14-black?style=flat&logo=next.js)](https://nextjs.org/)
