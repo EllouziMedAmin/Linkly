@@ -1,6 +1,8 @@
 # Lyncly 🚀
 ### *Programmable Ecosystem Linkages (V3 Dense Architecture)*
 
+<video src="./Lyncly Video Showcase.mp4" controls width="100%"></video>
+
 <div align="center">
 
 [![Next.js](https://img.shields.io/badge/Next.js-14-black?style=flat&logo=next.js)](https://nextjs.org/)
@@ -14,8 +16,6 @@
 
 **`Documentation`** | **`API Reference`** | **`Governance Hub`**
 ------------------- | ------------------- | --------------------
-
-<video src="./Lyncly Video Showcase.mp4" controls width="100%"></video>
 
 **Lyncly** is a decentralized, ecosystem-agnostic data pipeline infrastructure designed to bridge the gap between startups, mentors, accelerators, universities, and venture capital. 
 
