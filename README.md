@@ -1,7 +1,7 @@
 # Lyncly 🚀
 ### *Programmable Ecosystem Linkages (V3 Dense Architecture)*
 
-<video src="lyncly.mp4" controls width="100%"></video>
+<video src="Lyncly Video Showcase.mp4" controls width="100%"></video>
 
 <div align="center">
 
