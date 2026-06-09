@@ -15,7 +15,7 @@
 **`Documentation`** | **`API Reference`** | **`Governance Hub`**
 ------------------- | ------------------- | --------------------
 
-<video src="Lyncly Video Showcase.mp4" controls width="100%"></video>
+<video src="./Lyncly Video Showcase.mp4" controls width="100%"></video>
 
 **Lyncly** is a decentralized, ecosystem-agnostic data pipeline infrastructure designed to bridge the gap between startups, mentors, accelerators, universities, and venture capital. 
 
